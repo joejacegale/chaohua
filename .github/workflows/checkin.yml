@@ -1,0 +1,23 @@
+name: checkin
+run-name: daily checkin
+on:
+    schedule:
+        - cron: "0 1 * * *"
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                conf: [BAI, XIANG]
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v5
+            - name: Setup go
+              uses: actions/setup-go@v5
+            - name: Build and run
+              run: |
+                go build
+                echo ${{ secrets[matrix.conf] }} > config.yml
+                ./chaohua
