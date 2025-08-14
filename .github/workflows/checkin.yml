@@ -19,5 +19,5 @@ jobs:
             - name: Build and run
               run: |
                 go build
-                echo ${{ secrets[matrix.conf] }} > config.yml
+                echo "${{ secrets[matrix.conf] }}" > config.yml
                 ./chaohua
