@@ -1,23 +1,44 @@
 name: checkin
 run-name: daily checkin
 on:
-    schedule:
-        - cron: "0 1 * * *"
-    workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                conf: [BAI, XIANG]
-        steps:
-            - name: Check out repository code
-              uses: actions/checkout@v5
-            - name: Setup go
-              uses: actions/setup-go@v5
-            - name: Build and run
-              run: |
-                go build
-                echo "${{ secrets[matrix.conf] }}" > config.yml
-                ./chaohua
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        account: [bai, xiang]
+
+    steps:
+      - name: Check Out Repository Code
+        uses: actions/checkout@v6
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          cache: true
+      - name: Restore Cookie Cache
+        uses: actions/cache@v5
+        id: cookie-cache
+        with:
+          path: cookies_${{ matrix.account }}.bin
+          key: ${{ runner.os }}-cookies-${{ matrix.account }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-cookies-${{ matrix.account }}-
+      - name: Download Initial Artifact (Cold Start)
+        if: steps.cookie-cache.outputs.cache-hit != 'true'
+        env:
+          RAW_DATA: ${{ vars[format('initial_cookies_{0}', matrix.account)] }}
+        run: |
+          if [ ! -z "$RAW_DATA" ]; then
+            echo "$RAW_DATA" | base64 -d > cookies_${{ matrix.account }}.bin
+          fi
+      - name: Checkin
+        env: 
+          COOKIE_FILE: cookies_${{ matrix.account }}.bin
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+          WEBHOOK: ${{ secrets.WEBHOOK }}
+        run: go run main.go
