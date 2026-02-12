@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 
 	"github.com/chromedp/cdproto/network"
@@ -36,8 +37,10 @@ func (c *CookieService) GetSub() (string, error) {
 		return "", err
 	}
 
+	slog.Info("登录中")
 	cookies, err := c.Cookies(oldCookies)
 	if err != nil {
+		slog.Error("登录失败", "err", err)
 		return "", err
 	}
 

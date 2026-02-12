@@ -1,6 +1,9 @@
 package domain
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+)
 
 type ChaoHua struct {
 	id    string
@@ -45,7 +48,11 @@ func (a *Account) Exec() error {
 		return err
 	}
 	for _, ch := range chs {
+		slog.Info("签到中", "title", ch.title)
 		err = a.repo.Sign(ch)
+		if err != nil {
+			slog.Error("签到失败", "title", ch.title, "err", err)
+		}
 		a.events = append(a.events, Event{id: ch.id, title: ch.title, err: err})
 	}
 	return nil
