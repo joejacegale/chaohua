@@ -52,17 +52,27 @@ func (c *CookieService) GetSub() (string, error) {
 	return "", errors.New("not found")
 }
 
+type slogWriter struct {
+    level slog.Level
+}
+
+func (w slogWriter) Write(p []byte) (n int, err error) {
+    msg := string(p)
+    slog.Log(context.Background(), w.level, "chrome-output", "msg", msg)
+    return len(p), nil
+}
+
 func (c *CookieService) Cookies(oldCookies []*network.CookieParam) (cookies []*network.Cookie, err error) {
 	parent, cancel := chromedp.NewExecAllocator(
 		context.Background(),
 		chromedp.NoSandbox,
 		chromedp.DisableGPU,
-		chromedp.Flag("headless", true),
-		chromedp.Flag("no-first-run", true),
-		chromedp.Flag("no-default-browser-check", true),
-		chromedp.Flag("disable-infobars", true),
-		chromedp.Flag("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"),
+		chromedp.Headless,
+		chromedp.NoFirstRun,
+		chromedp.NoDefaultBrowserCheck,
+		chromedp.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"),
 		chromedp.WindowSize(1920, 1080),
+		chromedp.CombinedOutput(slogWriter{slog.LevelDebug}),
 	)
 	defer cancel()
 
