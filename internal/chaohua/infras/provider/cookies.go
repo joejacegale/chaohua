@@ -38,7 +38,13 @@ func (c *CookieService) GetSub() (string, error) {
 	}
 
 	slog.Info("登录中")
-	cookies, err := c.Cookies(oldCookies)
+	var cookies []*network.Cookie
+	for range 3 {
+		cookies, err = c.Cookies(oldCookies)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		slog.Error("登录失败", "err", err)
 		return "", err
