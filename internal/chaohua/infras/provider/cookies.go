@@ -66,6 +66,7 @@ func (c *CookieService) Cookies(oldCookies []*network.CookieParam) (cookies []*n
 		chromedp.Headless,
 		chromedp.NoFirstRun,
 		chromedp.NoDefaultBrowserCheck,
+		chromedp.Flag("disable-dev-shm-usage", true),
 		chromedp.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"),
 		chromedp.WindowSize(1920, 1080),
 	)
