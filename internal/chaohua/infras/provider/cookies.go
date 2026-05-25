@@ -12,6 +12,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/storage"
@@ -75,7 +76,10 @@ func (c *CookieService) Cookies(oldCookies []*network.CookieParam) (cookies []*n
 	ctx, cancel := chromedp.NewContext(parent)
 	defer cancel()
 
-	err = chromedp.Run(ctx,
+	timeoutCtx, timeoutCancel := context.WithTimeout(ctx, 60*time.Second)
+	defer timeoutCancel()
+
+	err = chromedp.Run(timeoutCtx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			for _, cp := range oldCookies {
 				if err := network.SetCookie(cp.Name, cp.Value).WithDomain(cp.Domain).WithPath(cp.Path).WithExpires(cp.Expires).Do(ctx); err != nil {
@@ -85,7 +89,7 @@ func (c *CookieService) Cookies(oldCookies []*network.CookieParam) (cookies []*n
 			return nil
 		}),
 		chromedp.Navigate("https://weibo.com"),
-		chromedp.WaitVisible("a[href=\"/at/weibo\"][title=\"消息\"]", chromedp.ByQuery),
+		chromedp.WaitVisible("a[title=\"消息\"]", chromedp.ByQuery),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			ccs, err := storage.GetCookies().Do(ctx)
 			if err != nil {
